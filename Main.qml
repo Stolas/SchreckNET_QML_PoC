@@ -57,6 +57,38 @@ ApplicationWindow {
                 root.height = Math.max(root.height, 700)
                 stackView.pop()
             }
+            
+            onGameJoined: function(gameName) {
+                // Open game in new tab view
+                root.title = "SchreckNET - " + gameName
+                root.minimumWidth = 1200
+                root.minimumHeight = 800
+                root.width = Math.max(root.width, 1400)
+                root.height = Math.max(root.height, 900)
+                stackView.push(gameTabViewComponent, {"initialGameName": gameName})
+            }
+        }
+    }
+    
+    Component {
+        id: gameTabViewComponent
+        GameTabView {
+            property string initialGameName: ""
+            
+            Component.onCompleted: {
+                if (initialGameName) {
+                    openGame(initialGameName)
+                }
+            }
+            
+            onBackToLobby: {
+                root.title = "SchreckNET - Game Lobby"
+                root.minimumWidth = 900
+                root.minimumHeight = 650
+                root.width = Math.max(root.width, 1000)
+                root.height = Math.max(root.height, 700)
+                stackView.pop()
+            }
         }
     }
     

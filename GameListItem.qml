@@ -149,8 +149,8 @@ Item {
                     Layout.preferredWidth: 85
                     Layout.minimumWidth: 75
                     Layout.minimumHeight: 28
+                    Layout.alignment: rightPadding
                     font.pixelSize: 12
-                    anchors.right: parent.right
                     onClicked: root.joinClicked()
                 }
                 
@@ -159,8 +159,8 @@ Item {
                     Layout.preferredWidth: 85
                     Layout.minimumWidth: 75
                     Layout.minimumHeight: 28
+                    Layout.alignment: rightPadding
                     font.pixelSize: 12
-                    anchors.right: parent.right
                     onClicked: root.spectateClicked()
                 }
             }

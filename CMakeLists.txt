@@ -8,9 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Set Qt6 path for ARM64 system
 set(CMAKE_PREFIX_PATH "C:/Dev/Libs/Qt/6.9.2/msvc2022_arm64")
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick Widgets)
 
 qt_standard_project_setup()
+
+# Set Qt policy to suppress warning about QML resource prefix
+qt_policy(SET QTP0001 NEW)
 
 qt_add_executable(appSchreckNET_QML_PoC
     main.cpp
@@ -18,6 +21,8 @@ qt_add_executable(appSchreckNET_QML_PoC
     LoginController.cpp
     GameLobbyController.h
     GameLobbyController.cpp
+    GameController.h
+    GameController.cpp
 )
 
 qt_add_qml_module(appSchreckNET_QML_PoC
@@ -28,6 +33,10 @@ qt_add_qml_module(appSchreckNET_QML_PoC
         LoginScreen.qml
         GameLobby.qml
         GameListItem.qml
+        GameTabView.qml
+        GameView.qml
+        CardTypeSection.qml
+        PlayerListItem.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -42,7 +51,7 @@ set_target_properties(appSchreckNET_QML_PoC PROPERTIES
 )
 
 target_link_libraries(appSchreckNET_QML_PoC
-    PRIVATE Qt6::Quick
+    PRIVATE Qt6::Quick Qt6::Widgets
 )
 
 include(GNUInstallDirs)

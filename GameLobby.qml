@@ -7,13 +7,13 @@ Item {
     id: root
     
     signal backToLogin()
+    signal gameJoined(string gameName)
     
     GameLobbyController {
         id: lobbyController
         
         onGameJoined: function(gameName) {
-            // Handle game joining - could navigate to game screen
-            console.log("Joined game:", gameName)
+            root.gameJoined(gameName)
         }
         
         onGameCreated: {
@@ -244,7 +244,7 @@ Item {
                 }
                 ComboBox {
                     id: formatCombo
-                    model: ["Standard", "Modern", "Legacy", "Pauper", "Commander"]
+                    model: ["Rated Regular", "Casual Dual", "Legacy", "Standard", "Pauper"]
                     Layout.fillWidth: true
                     Layout.minimumWidth: 200
                     Layout.minimumHeight: 25
@@ -258,7 +258,7 @@ Item {
                     id: maxPlayersSpinner
                     from: 2
                     to: 8
-                    value: 4
+                    value: 5
                     Layout.minimumWidth: 100
                     Layout.minimumHeight: 25
                 }
@@ -301,7 +301,7 @@ Item {
             // Reset fields
             gameNameField.text = ""
             formatCombo.currentIndex = 0
-            maxPlayersSpinner.value = 4
+            maxPlayersSpinner.value = 5
             gamePasswordField.text = ""
             buddiesOnlyCheck.checked = false
         }
