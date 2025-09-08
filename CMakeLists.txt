@@ -2,14 +2,22 @@ cmake_minimum_required(VERSION 3.16)
 
 project(SchreckNET_QML_PoC VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Set Qt6 path for ARM64 system
+set(CMAKE_PREFIX_PATH "C:/Dev/Libs/Qt/6.9.2/msvc2022_arm64")
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
-qt_standard_project_setup(REQUIRES 6.8)
+qt_standard_project_setup()
 
 qt_add_executable(appSchreckNET_QML_PoC
     main.cpp
+    LoginController.h
+    LoginController.cpp
+    GameLobbyController.h
+    GameLobbyController.cpp
 )
 
 qt_add_qml_module(appSchreckNET_QML_PoC
@@ -17,6 +25,9 @@ qt_add_qml_module(appSchreckNET_QML_PoC
     VERSION 1.0
     QML_FILES
         Main.qml
+        LoginScreen.qml
+        GameLobby.qml
+        GameListItem.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
