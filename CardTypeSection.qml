@@ -51,46 +51,66 @@ GroupBox {
                             border.width: 2
                             radius: 4
                             
-                            // Card Image
+                            // Card Image with better debugging
                             Image {
                                 anchors.fill: parent
                                 anchors.margins: 2
                                 source: parent.card.imageUrl || getCardImageUrl(parent.card.name)
                                 fillMode: Image.PreserveAspectFit
                                 asynchronous: true
+                                cache: false  // Disable caching to force reload
+                                
+                                Component.onCompleted: {
+                                    console.log("Image component created for:", parent.card.name)
+                                    console.log("Using source:", source)
+                                }
                                 
                                 onStatusChanged: {
-                                    if (status === Image.Error) {
-                                        console.log("Failed to load image for:", parent.card.name)
-                                        console.log("URL was:", source)
+                                    console.log("=== IMAGE STATUS CHANGE ===")
+                                    console.log("Card:", parent.card.name)
+                                    console.log("Status:", status, "(0=Null, 1=Ready, 2=Loading, 3=Error)")
+                                    console.log("Source:", source)
+                                    console.log("Progress:", progress)
+                                    console.log("Width:", width, "Height:", height)
+                                    console.log("PaintedWidth:", paintedWidth, "PaintedHeight:", paintedHeight)
+                                    console.log("========================")
+                                }
+                                
+                                onProgressChanged: {
+                                    if (progress > 0) {
+                                        console.log("Loading progress for", parent.card.name + ":", Math.round(progress * 100) + "%")
                                     }
                                 }
                                 
-                                // Fallback when image fails to load
+                                // Default fallback - always visible with card name
                                 Rectangle {
                                     anchors.fill: parent
-                                    color: "#e9ecef"
-                                    visible: parent.status === Image.Error
+                                    color: parent.status === Image.Error ? "#ffebee" : 
+                                           parent.status === Image.Loading ? "#fff3e0" : "#f0f0f0"
+                                    visible: parent.status !== Image.Ready || parent.paintedWidth === 0
                                     
-                                    Text {
+                                    Column {
                                         anchors.centerIn: parent
-                                        text: "IMG"
-                                        font.pixelSize: 8
-                                        color: "#6c757d"
-                                    }
-                                }
-                                
-                                // Loading indicator
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: "#f0f0f0"
-                                    visible: parent.status === Image.Loading
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "..."
-                                        font.pixelSize: 8
-                                        color: "#999"
+                                        spacing: 1
+                                        
+                                        Text {
+                                            text: parent.parent.status === Image.Error ? "ERR" :
+                                                  parent.parent.status === Image.Loading ? "..." : "?"
+                                            font.pixelSize: 8
+                                            color: parent.parent.status === Image.Error ? "#d32f2f" :
+                                                   parent.parent.status === Image.Loading ? "#ff9800" : "#666"
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                        }
+                                        
+                                        Text {
+                                            text: parent.parent.parent.card.name
+                                            font.pixelSize: 5
+                                            color: "#333"
+                                            wrapMode: Text.WordWrap
+                                            width: 38
+                                            horizontalAlignment: Text.AlignHCenter
+                                            maximumLineCount: 3
+                                        }
                                     }
                                 }
                             }
@@ -121,21 +141,26 @@ GroupBox {
                                 hoverEnabled: true
                                 
                                 onClicked: {
-                                    console.log("Selected card:", parent.card.name)
+                                    console.log("=== CARD CLICKED ===")
+                                    console.log("Card name:", parent.card.name)
+                                    console.log("imageUrl:", parent.card.imageUrl)
+                                    console.log("Generated URL:", getCardImageUrl(parent.card.name))
+                                    console.log("Full card data:", JSON.stringify(parent.card))
+                                    console.log("==================")
                                 }
                             }
                         }
                         
-                        // Tooltip
+                        // Tooltip with detailed info
                         ToolTip {
                             id: cardTooltip
-                            text: card.name + 
-                                  (card.manaCost ? "\nMana Cost: " + card.manaCost : "") + 
+                            text: "Card: " + card.name + 
                                   "\nType: " + card.type + 
-                                  "\nRarity: " + card.rarity +
-                                  "\nQuantity: " + card.quantity
+                                  "\nQuantity: " + card.quantity +
+                                  "\nImageURL: " + (card.imageUrl || "NOT SET") +
+                                  "\nGenerated: " + getCardImageUrl(card.name)
                             visible: cardMouseArea.containsMouse
-                            delay: 500
+                            delay: 300
                         }
                     }
                 }
@@ -157,11 +182,13 @@ GroupBox {
         // Convert card name to URL-friendly format for KRCG
         var urlName = cardName.toLowerCase()
             .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-            .replace(/\s+/g, '-')        // Replace spaces with hyphens
+            .replace(/\s+/g, '')        // Replace spaces with hyphens
             .replace(/-+/g, '-')         // Replace multiple hyphens with single
             .replace(/^-|-$/g, '');      // Remove leading/trailing hyphens
         
-        return "https://static.krcg.org/card/" + urlName + ".jpg"
+        var url = "https://static.krcg.org/card/" + urlName + ".jpg"
+        console.log("Generated URL for '" + cardName + "': " + url)
+        return url
     }
     
     function getTotalCardCount() {
