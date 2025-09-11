@@ -29,14 +29,14 @@ qt_add_qml_module(appSchreckNET_QML_PoC
     URI SchreckNET_QML_PoC
     VERSION 1.0
     QML_FILES
-        client/qml/Main.qml
-        client/qml/views/LoginScreen.qml
-        GameLobby.qml
-        GameListItem.qml
-        GameTabView.qml
-        GameView.qml
-        client/qml/components/CardTypeSection.qml
-        PlayerListItem.qml
+        qml/Main.qml
+        qml/views/LoginScreen.qml
+        qml/views/GameLobby.qml
+        qml/views/GameListItem.qml
+        qml/views/GameTabView.qml
+        qml/views/GameView.qml
+        qml/components/CardTypeSection.qml
+        qml/components/PlayerListItem.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
