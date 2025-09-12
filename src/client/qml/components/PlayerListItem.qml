@@ -25,12 +25,9 @@ Rectangle {
             color: "#007bff"
             radius: 20
             
-            Text {
-                anchors.centerIn: parent
-                text: playerData.name.charAt(0).toUpperCase()
-                color: "white"
-                font.bold: true
-                font.pixelSize: 16
+            Image {
+                anchors.fill: parent
+                source: playerData.avatar
             }
         }
         
@@ -97,17 +94,40 @@ Rectangle {
                 
                 Item { Layout.fillWidth: true } // Spacer
                 
-                Text {
-                    text: "?? " + playerData.life
-                    font.pixelSize: 10
-                    color: "#dc3545"
-                    font.bold: true
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 10
+                    Text {
+                        text: "?? "
+                        font.pixelSize: 10
+                        color: "#dc3545"
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: playerData.life
+                        font.pixelSize: 10
+                        color: "#dc3545"
+                        font.bold: true
+                    }
                 }
                 
-                Text {
-                    text: "?? " + playerData.handSize
-                    font.pixelSize: 10
-                    color: "#495057"
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 10
+
+                    Text {
+                        text: "?? "
+                        font.pixelSize: 10
+                        color: "#495057"
+                    }
+
+
+                    Text {
+                        text: playerData.handSize
+                        font.pixelSize: 10
+                        color: "#495057"
+                    }
                 }
             }
         }

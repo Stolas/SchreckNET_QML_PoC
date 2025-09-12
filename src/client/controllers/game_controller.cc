@@ -33,13 +33,13 @@ QVariant DeckModel::data(const QModelIndex& index, int role) const
     case TypeRole:
         return card.type;
     case ManaCostRole:
-        return card.mana_cost;
+        return QString(); // Card struct doesn't have mana_cost field, return empty string
     case ImageUrlRole:
         return card.image_url;
     case QuantityRole:
         return card.quantity;
     case RarityRole:
-        return card.rarity;
+        return QString(); // Card struct doesn't have rarity field, return empty string
     }
 
     return QVariant();
@@ -89,14 +89,21 @@ QVariantList DeckModel::getCardsByType(const QString& type) const
 {
     QVariantList card_list;
     for (const Card& card : cards) {
+        if (type == "Library" && card.type != "Crypt") {
+            QVariantMap card_map;
+            card_map["name"] = card.name;
+            card_map["type"] = card.type;
+            card_map["imageUrl"] = card.image_url;
+            card_map["quantity"] = card.quantity;
+            card_list.append(card_map);
+            continue;
+        }
         if (card.type == type) {
             QVariantMap card_map;
             card_map["name"] = card.name;
             card_map["type"] = card.type;
-            card_map["manaCost"] = card.mana_cost;
             card_map["imageUrl"] = card.image_url;
             card_map["quantity"] = card.quantity;
-            card_map["rarity"] = card.rarity;
             card_list.append(card_map);
         }
     }
@@ -105,51 +112,59 @@ QVariantList DeckModel::getCardsByType(const QString& type) const
 
 void DeckModel::loadSampleDeck()
 {
-    // Sample VTEs
+    // Sample VTEs cards - each Card needs: name, type, image_url, quantity
     cards = {
         // Crypt
-        {"Howler", "Crypt", "", "https://static.krcg.org/card/howler.jpg", 4, ""},
-        {"Siamese", "Crypt", "", "https://static.krcg.org/card/siamese.jpg", 3, ""},
-        {"Cynthia", "Crypt", "", "https://static.krcg.org/card/cynthia.jpg", 3, ""},
-        {"Nettie", "Crypt", "", "https://static.krcg.org/card/nettie.jpg", 1, ""},
-        {"Juanita", "Crypt", "", "https://static.krcg.org/card/juanita.jpg", 1, ""},
+        {"Howler", "Crypt", "https://static.krcg.org/card/howler.jpg", 4},
+        {"Siamese", "Crypt", "https://static.krcg.org/card/siamesethe.jpg", 3},
+        {"Cynthia", "Crypt", "https://static.krcg.org/card/cynthiaingold.jpg", 3},
+        {"Nettie", "Crypt", "https://static.krcg.org/card/nettiehale.jpg", 1},
+        {"Juanita", "Crypt", "https://static.krcg.org/card/juanitasantiago.jpg", 1},
+        
         // Master
-        {"Archon Investigation", "Master", "", "https://static.krcg.org/card/archon-investigation.jpg", 1, ""},
-        {"Guardian Angel", "Master", "", "https://static.krcg.org/card/guardian-angel.jpg", 1, ""},
-        {"Powerbase: Montreal", "Master", "", "https://static.krcg.org/card/powerbase-montreal.jpg", 1, ""},
-        {"Rack, The", "Master", "", "https://static.krcg.org/card/rack-the.jpg", 1, ""},
-        {"Smiling Jack, The Anarch", "Master", "", "https://static.krcg.org/card/smiling-jack-the-anarch.jpg", 2, ""},
-        {"Vessel", "Master", "", "https://static.krcg.org/card/vessel.jpg", 4, ""},
-        {"Villein", "Master", "", "https://static.krcg.org/card/villein.jpg", 4, ""},
+        {"Archon Investigation", "Master", "https://static.krcg.org/card/archoninvestigation.jpg", 1},
+        {"Guardian Angel", "Master", "https://static.krcg.org/card/guardianangel.jpg", 1},
+        {"Powerbase: Montreal", "Master", "https://static.krcg.org/card/powerbasemontreal.jpg", 1},
+        {"Rack, The", "Master", "https://static.krcg.org/card/rackthe.jpg", 1},
+        {"Smiling Jack, The Anarch", "Master", "https://static.krcg.org/card/smilingjacktheanarch.jpg", 1},
+        {"Vessel", "Master", "https://static.krcg.org/card/vessel.jpg", 4},
+        {"Villein", "Master", "https://static.krcg.org/card/villein.jpg", 4},
+        
         // Action
-        {"Abbot", "Action", "", "https://static.krcg.org/card/abbot.jpg", 2, ""},
-        {"Army of Rats", "Action", "", "https://static.krcg.org/card/army-of-rats.jpg", 1, ""},
-        {"Charge of the Buffalo", "Action", "", "https://static.krcg.org/card/charge-of-the-buffalo.jpg", 2, ""},
-        {"Enchant Kindred", "Action", "", "https://static.krcg.org/card/enchant-kindred.jpg", 7, ""},
-        {"Engling Fury", "Action", "", "https://static.krcg.org/card/engling-fury.jpg", 4, ""},
+        {"Abbot", "Action", "https://static.krcg.org/card/abbot.jpg", 2},
+        {"Army of Rats", "Action", "https://static.krcg.org/card/armyofrats.jpg", 1},
+        {"Charge of the Buffalo", "Action", "https://static.krcg.org/card/chargeofthebuffalo.jpg", 2},
+        {"Enchant Kindred", "Action", "https://static.krcg.org/card/enchantkindred.jpg", 7},
+        {"Engling Fury", "Action", "https://static.krcg.org/card/englingfury.jpg", 4},
+        
         // Ally
-        {"High Top", "Ally", "", "https://static.krcg.org/card/high-top.jpg", 1, ""},
-        {"Ossian", "Ally", "", "https://static.krcg.org/card/ossian.jpg", 1, ""},
+        {"High Top", "Ally", "https://static.krcg.org/card/hightop.jpg", 1},
+        {"Ossian", "Ally", "https://static.krcg.org/card/ossian.jpg", 1},
+        
         // Action Modifier
-        {"Aire of Elation", "Modifier", "", "https://static.krcg.org/card/aire-of-elation.jpg", 2, ""},
-        {"Squirrel Balance", "Modifier", "", "https://static.krcg.org/card/squirrel-balance.jpg", 3, ""},
+        {"Aire of Elation", "Modifier", "https://static.krcg.org/card/aireofelation.jpg", 2},
+        {"Squirrel Balance", "Modifier", "https://static.krcg.org/card/squirrelbalance.jpg", 3},
+        
         // Action Modifier/Combat
-        {"Swiftness of the Stag", "Mixed", "", "https://static.krcg.org/card/swiftness-of-the-stag.jpg", 8, ""},
+        {"Swiftness of the Stag", "Mixed", "https://static.krcg.org/card/swiftnessofthestag.jpg", 8},
+        
         // Reaction
-        {"Cats' Guidance", "Reaction", "", "https://static.krcg.org/card/cats-guidance.jpg", 4, ""},
-        {"Ears of the Hare", "Reaction", "", "https://static.krcg.org/card/ears-of-the-hare.jpg", 6, ""},
-        {"Falcon's Eye", "Reaction", "", "https://static.krcg.org/card/falcons-eye.jpg", 1, ""},
-        {"On the Qui Vive", "Reaction", "", "https://static.krcg.org/card/on-the-qui-vive.jpg", 3, ""},
-        {"Speak with Spirits", "Reaction", "", "https://static.krcg.org/card/speak-with-spirits.jpg", 8, ""},
+        {"Cats' Guidance", "Reaction", "https://static.krcg.org/card/catsguidance.jpg", 4},
+        {"Ears of the Hare", "Reaction", "https://static.krcg.org/card/earsofthehare.jpg", 6},
+        {"Falcon's Eye", "Reaction", "https://static.krcg.org/card/falconseye.jpg", 1},
+        {"On the Qui Vive", "Reaction", "https://static.krcg.org/card/onthequivive.jpg", 3},
+        {"Speak with Spirits", "Reaction", "https://static.krcg.org/card/speakwithspirits.jpg", 8},
+        
         // Combat
-        {"Canine Horde", "Combat", "", "https://static.krcg.org/card/canine-horde.jpg", 1, ""},
-        {"Carrion Crows", "Combat", "", "https://static.krcg.org/card/carrion-crows.jpg", 3, ""},
-        {"Drawing Out the Beast", "Combat", "", "https://static.krcg.org/card/drawing-out-the-beast.jpg", 2, ""},
-        {"Target Vitals", "Combat", "", "https://static.krcg.org/card/target-vitals.jpg", 6, ""},
-        {"Taste of Vitae", "Combat", "", "https://static.krcg.org/card/taste-of-vitae.jpg", 4, ""},
-        {"Weighted Walking Stick", "Combat", "", "https://static.krcg.org/card/weighted-walking-stick.jpg", 6, ""},
+        {"Canine Horde", "Combat", "https://static.krcg.org/card/caninehorde.jpg", 1},
+        {"Carrion Crows", "Combat", "https://static.krcg.org/card/carrioncrows.jpg", 3},
+        {"Drawing Out the Beast", "Combat", "https://static.krcg.org/card/drawingoutthebeast.jpg", 2},
+        {"Target Vitals", "Combat", "https://static.krcg.org/card/targetvitals.jpg", 6},
+        {"Taste of Vitae", "Combat", "https://static.krcg.org/card/tasteofvitae.jpg", 4},
+        {"Weighted Walking Stick", "Combat", "https://static.krcg.org/card/weightedwalkingstick.jpg", 6},
+        
         // Event
-        {"Narrow Minds", "Event", "", "https://static.krcg.org/card/narrow-minds.jpg", 1, ""},
+        {"Narrow Minds", "Event", "https://static.krcg.org/card/narrowminds.jpg", 1},
     };
 }
 
@@ -230,9 +245,9 @@ void GamePlayersModel::updatePlayerLife(const QString& player_name, int life)
 void GamePlayersModel::loadSamplePlayers()
 {
     players = {
-        {"PlayerOne", "Ready", 20, 7, true, "qrc:/images/avatar1.png"},
-        {"ProPlayer", "Playing", 18, 5, false, "qrc:/images/avatar2.png"},
-        {"CurrentUser", "Playing", 20, 6, false, "qrc:/images/avatar3.png"}
+        {"PlayerOne", "Ready", 20, 7, true, "https://placecats.com/128/128"},
+        {"ProPlayer", "Selecting Deck", 18, 5, false, "https://placecats.com/64/128"},
+        {"CurrentUser", "Selecting Deck", 20, 6, false, "https://placecats.com/64/64"}
     };
 }
 

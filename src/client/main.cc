@@ -7,9 +7,9 @@
 #include <QQmlApplicationEngine>
 
 // Include controller headers to ensure QML type registration
-#include "login_controller.h"
-#include "game_lobby_controller.h"
-#include "game_controller.h"
+#include "controllers/login_controller.h"
+#include "controllers/game_lobby_controller.h"
+#include "controllers/game_controller.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>

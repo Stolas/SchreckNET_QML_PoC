@@ -36,13 +36,16 @@ qt_policy(SET QTP0004 NEW)
 
 qt_add_executable(appSchreckNET_QML_PoC
     main.cc
-    login_controller.h
-    login_controller.cc
-    game_lobby_controller.h
-    game_lobby_controller.cc
-    game_controller.h
-    game_controller.cc
+    controllers/login_controller.h
+    controllers/login_controller.cc
+    controllers/game_lobby_controller.h
+    controllers/game_lobby_controller.cc
+    controllers/game_controller.h
+    controllers/game_controller.cc
 )
+
+# Add include directory for the controllers
+target_include_directories(appSchreckNET_QML_PoC PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/controllers)
 
 qt_add_qml_module(appSchreckNET_QML_PoC
     URI SchreckNET_QML_PoC
