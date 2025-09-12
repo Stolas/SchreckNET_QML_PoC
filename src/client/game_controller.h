@@ -15,10 +15,8 @@ struct Card
 {
     QString name;
     QString type;        // Crypt, Master, Action, etc.
-    QString mana_cost;
     QString image_url;
     int quantity;
-    QString rarity;      // Common, Uncommon, Rare, Mythic
 };
 
 // Player in the game

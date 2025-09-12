@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2020-2025, Stolas <schrecknet@codeinject.org>
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -20,11 +15,13 @@ GroupBox {
     Layout.minimumWidth: parent ? parent.width : 0
     Layout.preferredWidth: parent ? parent.width : 0
     Layout.minimumHeight: 80
-    Layout.preferredHeight: 150
+    // Layout.preferredHeight: parent.height
     
     ScrollView {
         anchors.fill: parent
         anchors.margins: 5
+        Layout.fillWidth: true
+        Layout.fillHeight: true
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
         ScrollBar.horizontal.policy: ScrollBar.AsNeeded
         
@@ -52,7 +49,7 @@ GroupBox {
                         Rectangle {
                             anchors.fill: parent
                             color: cardMouseArea.containsMouse ? "#e3f2fd" : "#f8f9fa"
-                            border.color: getRarityColor(parent.card.rarity)
+                            border.color: getTypeColor(parent.card.rarity)
                             border.width: 2
                             radius: 4
                             
@@ -60,7 +57,7 @@ GroupBox {
                             Image {
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                source: parent.card.imageUrl || getCardImageUrl(parent.card.name)
+                                source: card.imageUrl || getCardImageUrl(card.name)
                                 fillMode: Image.PreserveAspectFit
                                 asynchronous: true
                                 cache: false  // Disable caching to force reload
@@ -147,9 +144,10 @@ GroupBox {
                                 
                                 onClicked: {
                                     console.log("=== CARD CLICKED ===")
-                                    console.log("Card name:", parent.card.name)
-                                    console.log("imageUrl:", parent.card.imageUrl)
-                                    console.log("Generated URL:", getCardImageUrl(parent.card.name))
+                                    // console.log("Card name:", parent.card.name)
+                                    // console.log("Type:", parent.card.type)
+                                    // console.log("imageUrl:", parent.card.imageUrl)
+                                    // console.log("Quantity:", parent.card.quantity)
                                     console.log("Full card data:", JSON.stringify(parent.card))
                                     console.log("==================")
                                 }
@@ -162,8 +160,9 @@ GroupBox {
                             text: "Card: " + card.name + 
                                   "\nType: " + card.type + 
                                   "\nQuantity: " + card.quantity +
-                                  "\nImageURL: " + (card.imageUrl || "NOT SET") +
+                                  "\nImageURL: " + card.imageUrl +
                                   "\nGenerated: " + getCardImageUrl(card.name)
+                                  //"\nFull card data:", JSON.stringify(card)
                             visible: cardMouseArea.containsMouse
                             delay: 300
                         }
@@ -173,9 +172,9 @@ GroupBox {
         }
     }
     
-    function getRarityColor(rarity) {
+    function getTypeColor(rarity) {
         switch(rarity) {
-            case "Common": return "#95a5a6"
+            case "Master": return "#95a5a6"
             case "Uncommon": return "#3498db"
             case "Rare": return "#f39c12"
             case "Mythic": return "#e74c3c"
