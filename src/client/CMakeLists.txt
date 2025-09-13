@@ -1,5 +1,46 @@
 cmake_minimum_required(VERSION 3.16)
 
+function(deploy_qt_dependencies target_name)
+    if(NOT WIN32)
+        return()
+    endif()
+
+    # Validate that the target exists
+    if(NOT TARGET ${target_name})
+        message(FATAL_ERROR "Target '${target_name}' does not exist")
+        return()
+    endif()
+
+    # Find windeployqt executable
+    get_target_property(_qt_core_location Qt6::Core LOCATION)
+    if(NOT _qt_core_location)
+        message(WARNING "Qt6::Core location not found, trying IMPORTED_LOCATION")
+        get_target_property(_qt_core_location Qt6::Core IMPORTED_LOCATION)
+    endif()
+
+    if(NOT _qt_core_location)
+        message(WARNING "Could not determine Qt6::Core location, attempting to find windeployqt in PATH")
+        find_program(WINDEPLOYQT_EXECUTABLE windeployqt)
+    else()
+        get_filename_component(_qt_bin_dir "${_qt_core_location}" DIRECTORY)
+        find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+    endif()
+
+    if(NOT WINDEPLOYQT_EXECUTABLE)
+        message(FATAL_ERROR "windeployqt not found!")
+        return()
+    endif()
+
+    # Add custom command to deploy Qt dependencies
+    add_custom_command(TARGET ${target_name} POST_BUILD
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}" "$<TARGET_FILE:${target_name}>"
+        COMMENT "Deploying Qt dependencies for ${target_name}"
+        VERBATIM
+    )
+
+    message(STATUS "Qt deployment configured for target: ${target_name}")
+endfunction()
+
 project(SchreckNET_QML_PoC VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -24,7 +65,6 @@ if(EMSCRIPTEN)
     
 else()
     # Windows/Desktop build settings
-    set(CMAKE_PREFIX_PATH "C:/Dev/Libs/Qt/6.9.2/msvc2022_arm64")
     find_package(Qt6 REQUIRED COMPONENTS Quick Widgets)
 endif()
 
@@ -87,9 +127,8 @@ else()
         WIN32_EXECUTABLE TRUE
     )
     
-    target_link_libraries(appSchreckNET_QML_PoC
-        PRIVATE Qt6::Quick Qt6::Widgets
-    )
+    target_link_libraries(appSchreckNET_QML_PoC PRIVATE Qt6::Quick Qt6::Widgets)
+    deploy_qt_dependencies(appSchreckNET_QML_PoC)
 endif()
 
 include(GNUInstallDirs)

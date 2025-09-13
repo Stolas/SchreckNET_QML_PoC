@@ -6,6 +6,92 @@
 #include "game_controller.h"
 #include <QDebug>
 #include <QStandardPaths>
+#include <QSet>
+#include <QMap>
+
+// Card utility functions implementation
+QString Card::cardTypeToString(Card::Type type) {
+  QStringList type_strings;
+
+  // Check each flag and add corresponding string
+  if (static_cast<int>(type) & static_cast<int>(Type::Crypt))
+    type_strings << "Crypt";
+  if (static_cast<int>(type) & static_cast<int>(Type::Master))
+    type_strings << "Master";
+  if (static_cast<int>(type) & static_cast<int>(Type::Action))
+    type_strings << "Action";
+  if (static_cast<int>(type) & static_cast<int>(Type::ActionModifier))
+    type_strings << "Modifier";
+  if (static_cast<int>(type) & static_cast<int>(Type::PoliticalAction))
+    type_strings << "Political Action";
+  if (static_cast<int>(type) & static_cast<int>(Type::Equipment))
+    type_strings << "Equipment";
+  if (static_cast<int>(type) & static_cast<int>(Type::Retainer))
+    type_strings << "Retainer";
+  if (static_cast<int>(type) & static_cast<int>(Type::Ally))
+    type_strings << "Ally";
+  if (static_cast<int>(type) & static_cast<int>(Type::Combat))
+    type_strings << "Combat";
+  if (static_cast<int>(type) & static_cast<int>(Type::Reaction))
+    type_strings << "Reaction";
+  if (static_cast<int>(type) & static_cast<int>(Type::Event))
+    type_strings << "Event";
+  if (static_cast<int>(type) & static_cast<int>(Type::Power))
+    type_strings << "Power";
+  if (static_cast<int>(type) & static_cast<int>(Type::Conviction))
+    type_strings << "Conviction";
+
+  // Handle special cases
+  if (type_strings.isEmpty())
+    return "Unknown";
+
+  // Join multiple types with "/"
+  return type_strings.join("/");
+}
+
+Card::Type Card::stringToCardType(const QString &typeStr) {
+  // Handle single types first
+  if (typeStr == "Crypt")
+    return static_cast<Type>(static_cast<int>(Type::Crypt));
+  if (typeStr == "Master")
+    return static_cast<Type>(static_cast<int>(Type::Master));
+  if (typeStr == "Action")
+    return static_cast<Type>(static_cast<int>(Type::Action));
+  if (typeStr == "Modifier")
+    return static_cast<Type>(static_cast<int>(Type::ActionModifier));
+  if (typeStr == "Political Action")
+    return static_cast<Type>(static_cast<int>(Type::PoliticalAction));
+  if (typeStr == "Equipment")
+    return static_cast<Type>(static_cast<int>(Type::Equipment));
+  if (typeStr == "Retainer")
+    return static_cast<Type>(static_cast<int>(Type::Retainer));
+  if (typeStr == "Ally")
+    return static_cast<Type>(static_cast<int>(Type::Ally));
+  if (typeStr == "Combat")
+    return static_cast<Type>(static_cast<int>(Type::Combat));
+  if (typeStr == "Reaction")
+    return static_cast<Type>(static_cast<int>(Type::Reaction));
+  if (typeStr == "Event")
+    return static_cast<Type>(static_cast<int>(Type::Event));
+  if (typeStr == "Power")
+    return static_cast<Type>(static_cast<int>(Type::Power));
+  if (typeStr == "Conviction")
+    return static_cast<Type>(static_cast<int>(Type::Conviction));
+
+  // Handle compound types (e.g., "Action/Combat")
+  if (typeStr.contains("/")) {
+    QStringList parts = typeStr.split("/");
+    int combinedType = 0;
+    for (const QString &part : parts) {
+      Card::Type partType = stringToCardType(part.trimmed());
+      combinedType |= static_cast<int>(partType);
+    }
+    return static_cast<Type>(combinedType);
+  }
+
+  // Default to Token for unknown types
+  return Type::Token;
+}
 
 // DeckModel implementation
 DeckModel::DeckModel(QObject* parent)
@@ -20,6 +106,26 @@ int DeckModel::rowCount(const QModelIndex& parent) const
     return cards.size();
 }
 
+int DeckModel::getCryptSize() const {
+  int cnt = 0;
+  for (auto card : cards) {
+    if (card.getType() == Card::Type::Crypt) {
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
+int DeckModel::getLibrarySize() const {
+  int cnt = 0;
+  for (auto card : cards) {
+    if (card.getType() != Card::Type::Crypt) {
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
 QVariant DeckModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid() || index.row() >= cards.size())
@@ -29,17 +135,11 @@ QVariant DeckModel::data(const QModelIndex& index, int role) const
 
     switch (role) {
     case NameRole:
-        return card.name;
+        return card.getName();
     case TypeRole:
-        return card.type;
-    case ManaCostRole:
-        return QString(); // Card struct doesn't have mana_cost field, return empty string
+        return card.typeString();
     case ImageUrlRole:
-        return card.image_url;
-    case QuantityRole:
-        return card.quantity;
-    case RarityRole:
-        return QString(); // Card struct doesn't have rarity field, return empty string
+        return card.getImageUrl();
     }
 
     return QVariant();
@@ -50,10 +150,7 @@ QHash<int, QByteArray> DeckModel::roleNames() const
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
     roles[TypeRole] = "type";
-    roles[ManaCostRole] = "manaCost";
     roles[ImageUrlRole] = "imageUrl";
-    roles[QuantityRole] = "quantity";
-    roles[RarityRole] = "rarity";
     return roles;
 }
 
@@ -78,33 +175,64 @@ QStringList DeckModel::getCardTypes() const
 {
     QStringList types;
     for (const Card& card : cards) {
-        if (!types.contains(card.type)) {
-            types.append(card.type);
+        QString typeStr = card.typeString();
+        if (!types.contains(typeStr)) {
+            types.append(typeStr);
         }
     }
     return types;
 }
-
-QVariantList DeckModel::getCardsByType(const QString& type) const
+QVariantList DeckModel::getCryptCards() const
 {
     QVariantList card_list;
+    QMap<QString, int> card_counts;
+    
+    // Count occurrences of each card
     for (const Card& card : cards) {
-        if (type == "Library" && card.type != "Crypt") {
-            QVariantMap card_map;
-            card_map["name"] = card.name;
-            card_map["type"] = card.type;
-            card_map["imageUrl"] = card.image_url;
-            card_map["quantity"] = card.quantity;
-            card_list.append(card_map);
-            continue;
+        if (card.getType() == Card::Type::Crypt) {
+            card_counts[card.getName()]++;
         }
-        if (card.type == type) {
+    }
+    
+    // Create unique cards with quantities
+    QSet<QString> processed_cards;
+    for (const Card& card : cards) {
+        if (card.getType() == Card::Type::Crypt && !processed_cards.contains(card.getName())) {
             QVariantMap card_map;
-            card_map["name"] = card.name;
-            card_map["type"] = card.type;
-            card_map["imageUrl"] = card.image_url;
-            card_map["quantity"] = card.quantity;
+            card_map["name"] = card.getName();
+            card_map["type"] = card.typeString();
+            card_map["imageUrl"] = card.getImageUrl();
+            card_map["quantity"] = card_counts[card.getName()];
             card_list.append(card_map);
+            processed_cards.insert(card.getName());
+        }
+    }
+    return card_list;
+}
+
+QVariantList DeckModel::getLibraryCards() const
+{
+    QVariantList card_list;
+    QMap<QString, int> card_counts;
+    
+    // Count occurrences of each card
+    for (const Card& card : cards) {
+        if (card.getType() != Card::Type::Crypt) {
+            card_counts[card.getName()]++;
+        }
+    }
+    
+    // Create unique cards with quantities
+    QSet<QString> processed_cards;
+    for (const Card& card : cards) {
+        if (card.getType() != Card::Type::Crypt && !processed_cards.contains(card.getName())) {
+            QVariantMap card_map;
+            card_map["name"] = card.getName();
+            card_map["type"] = card.typeString();
+            card_map["imageUrl"] = card.getImageUrl();
+            card_map["quantity"] = card_counts[card.getName()];
+            card_list.append(card_map);
+            processed_cards.insert(card.getName());
         }
     }
     return card_list;
@@ -115,56 +243,131 @@ void DeckModel::loadSampleDeck()
     // Sample VTEs cards - each Card needs: name, type, image_url, quantity
     cards = {
         // Crypt
-        {"Howler", "Crypt", "https://static.krcg.org/card/howler.jpg", 4},
-        {"Siamese", "Crypt", "https://static.krcg.org/card/siamesethe.jpg", 3},
-        {"Cynthia", "Crypt", "https://static.krcg.org/card/cynthiaingold.jpg", 3},
-        {"Nettie", "Crypt", "https://static.krcg.org/card/nettiehale.jpg", 1},
-        {"Juanita", "Crypt", "https://static.krcg.org/card/juanitasantiago.jpg", 1},
+        Card("Howler", Card::Type::Crypt, "https://static.krcg.org/card/howler.jpg"),
+        Card("Howler", Card::Type::Crypt, "https://static.krcg.org/card/howler.jpg"),
+        Card("Howler", Card::Type::Crypt, "https://static.krcg.org/card/howler.jpg"),
+        Card("Howler", Card::Type::Crypt, "https://static.krcg.org/card/howler.jpg"),
+
+        Card("Siamese", Card::Type::Crypt, "https://static.krcg.org/card/siamesethe.jpg"),
+        Card("Siamese", Card::Type::Crypt, "https://static.krcg.org/card/siamesethe.jpg"),
+        Card("Siamese", Card::Type::Crypt, "https://static.krcg.org/card/siamesethe.jpg"),
+
+        Card("Cynthia", Card::Type::Crypt, "https://static.krcg.org/card/cynthiaingold.jpg"),
+        Card("Cynthia", Card::Type::Crypt, "https://static.krcg.org/card/cynthiaingold.jpg"),
+        Card("Cynthia", Card::Type::Crypt, "https://static.krcg.org/card/cynthiaingold.jpg"),
+
+        Card("Nettie", Card::Type::Crypt, "https://static.krcg.org/card/nettiehale.jpg"),
+        Card("Juanita", Card::Type::Crypt, "https://static.krcg.org/card/juanitasantiago.jpg"),
         
         // Master
-        {"Archon Investigation", "Master", "https://static.krcg.org/card/archoninvestigation.jpg", 1},
-        {"Guardian Angel", "Master", "https://static.krcg.org/card/guardianangel.jpg", 1},
-        {"Powerbase: Montreal", "Master", "https://static.krcg.org/card/powerbasemontreal.jpg", 1},
-        {"Rack, The", "Master", "https://static.krcg.org/card/rackthe.jpg", 1},
-        {"Smiling Jack, The Anarch", "Master", "https://static.krcg.org/card/smilingjacktheanarch.jpg", 1},
-        {"Vessel", "Master", "https://static.krcg.org/card/vessel.jpg", 4},
-        {"Villein", "Master", "https://static.krcg.org/card/villein.jpg", 4},
+        Card("Archon Investigation", Card::Type::Master, "https://static.krcg.org/card/archoninvestigation.jpg"),
+        Card("Guardian Angel", Card::Type::Master, "https://static.krcg.org/card/guardianangel.jpg"),
+        Card("Powerbase: Montreal", Card::Type::Master, "https://static.krcg.org/card/powerbasemontreal.jpg"),
+        Card("Rack, The", Card::Type::Master, "https://static.krcg.org/card/rackthe.jpg"),
+        Card("Smiling Jack, The Anarch", Card::Type::Master, "https://static.krcg.org/card/smilingjacktheanarch.jpg"),
+        Card("Vessel", Card::Type::Master, "https://static.krcg.org/card/vessel.jpg"),
+        Card("Vessel", Card::Type::Master, "https://static.krcg.org/card/vessel.jpg"),
+        Card("Vessel", Card::Type::Master, "https://static.krcg.org/card/vessel.jpg"),
+        Card("Vessel", Card::Type::Master, "https://static.krcg.org/card/vessel.jpg"),
+
+        Card("Villein", Card::Type::Master, "https://static.krcg.org/card/villein.jpg"),
+        Card("Villein", Card::Type::Master, "https://static.krcg.org/card/villein.jpg"),
+        Card("Villein", Card::Type::Master, "https://static.krcg.org/card/villein.jpg"),
+        Card("Villein", Card::Type::Master, "https://static.krcg.org/card/villein.jpg"),
         
         // Action
-        {"Abbot", "Action", "https://static.krcg.org/card/abbot.jpg", 2},
-        {"Army of Rats", "Action", "https://static.krcg.org/card/armyofrats.jpg", 1},
-        {"Charge of the Buffalo", "Action", "https://static.krcg.org/card/chargeofthebuffalo.jpg", 2},
-        {"Enchant Kindred", "Action", "https://static.krcg.org/card/enchantkindred.jpg", 7},
-        {"Engling Fury", "Action", "https://static.krcg.org/card/englingfury.jpg", 4},
+        Card("Abbot", Card::Type::Action, "https://static.krcg.org/card/abbot.jpg"),
+        Card("Abbot", Card::Type::Action, "https://static.krcg.org/card/abbot.jpg"),
+        Card("Army of Rats", Card::Type::Action, "https://static.krcg.org/card/armyofrats.jpg"),
+        Card("Charge of the Buffalo", Card::Type::Action, "https://static.krcg.org/card/chargeofthebuffalo.jpg"),
+        Card("Charge of the Buffalo", Card::Type::Action, "https://static.krcg.org/card/chargeofthebuffalo.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+        Card("Enchant Kindred", Card::Type::Action, "https://static.krcg.org/card/enchantkindred.jpg"),
+
+        Card("Engling Fury", Card::Type::Action, "https://static.krcg.org/card/englingfury.jpg"),
+        Card("Engling Fury", Card::Type::Action, "https://static.krcg.org/card/englingfury.jpg"),
+        Card("Engling Fury", Card::Type::Action, "https://static.krcg.org/card/englingfury.jpg"),
+        Card("Engling Fury", Card::Type::Action, "https://static.krcg.org/card/englingfury.jpg"),
         
         // Ally
-        {"High Top", "Ally", "https://static.krcg.org/card/hightop.jpg", 1},
-        {"Ossian", "Ally", "https://static.krcg.org/card/ossian.jpg", 1},
+        Card("High Top", Card::Type::Ally, "https://static.krcg.org/card/hightop.jpg"),
+        Card("Ossian", Card::Type::Ally, "https://static.krcg.org/card/ossian.jpg"),
         
         // Action Modifier
-        {"Aire of Elation", "Modifier", "https://static.krcg.org/card/aireofelation.jpg", 2},
-        {"Squirrel Balance", "Modifier", "https://static.krcg.org/card/squirrelbalance.jpg", 3},
+        Card("Aire of Elation", Card::Type::ActionModifier, "https://static.krcg.org/card/aireofelation.jpg"),
+        Card("Aire of Elation", Card::Type::ActionModifier, "https://static.krcg.org/card/aireofelation.jpg"),
+
+        Card("Squirrel Balance", Card::Type::ActionModifier, "https://static.krcg.org/card/squirrelbalance.jpg"),
+        Card("Squirrel Balance", Card::Type::ActionModifier, "https://static.krcg.org/card/squirrelbalance.jpg"),
+        Card("Squirrel Balance", Card::Type::ActionModifier, "https://static.krcg.org/card/squirrelbalance.jpg"),
         
         // Action Modifier/Combat
-        {"Swiftness of the Stag", "Mixed", "https://static.krcg.org/card/swiftnessofthestag.jpg", 8},
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
+        Card("Swiftness of the Stag", static_cast<Card::Type>( static_cast<int>(Card::Type::ActionModifier) | static_cast<int>(Card::Type::Combat)), "https://static.krcg.org/card/swiftnessofthestag.jpg"),
         
         // Reaction
-        {"Cats' Guidance", "Reaction", "https://static.krcg.org/card/catsguidance.jpg", 4},
-        {"Ears of the Hare", "Reaction", "https://static.krcg.org/card/earsofthehare.jpg", 6},
-        {"Falcon's Eye", "Reaction", "https://static.krcg.org/card/falconseye.jpg", 1},
-        {"On the Qui Vive", "Reaction", "https://static.krcg.org/card/onthequivive.jpg", 3},
-        {"Speak with Spirits", "Reaction", "https://static.krcg.org/card/speakwithspirits.jpg", 8},
+        Card("Cats' Guidance", Card::Type::Reaction, "https://static.krcg.org/card/catsguidance.jpg"),
+        Card("Cats' Guidance", Card::Type::Reaction, "https://static.krcg.org/card/catsguidance.jpg"),
+        Card("Cats' Guidance", Card::Type::Reaction, "https://static.krcg.org/card/catsguidance.jpg"),
+        Card("Cats' Guidance", Card::Type::Reaction, "https://static.krcg.org/card/catsguidance.jpg"),
+
+        Card("Ears of the Hare", Card::Type::Reaction, "https://static.krcg.org/card/earsofthehare.jpg"),
+        Card("Ears of the Hare", Card::Type::Reaction, "https://static.krcg.org/card/earsofthehare.jpg"),
+        Card("Ears of the Hare", Card::Type::Reaction, "https://static.krcg.org/card/earsofthehare.jpg"),
+        Card("Ears of the Hare", Card::Type::Reaction, "https://static.krcg.org/card/earsofthehare.jpg"),
+        Card("Ears of the Hare", Card::Type::Reaction, "https://static.krcg.org/card/earsofthehare.jpg"),
+        Card("Ears of the Hare", Card::Type::Reaction, "https://static.krcg.org/card/earsofthehare.jpg"),
+
+        Card("Falcon's Eye", Card::Type::Reaction, "https://static.krcg.org/card/falconseye.jpg"),
+        Card("On the Qui Vive", Card::Type::Reaction, "https://static.krcg.org/card/onthequivive.jpg"),
+        Card("On the Qui Vive", Card::Type::Reaction, "https://static.krcg.org/card/onthequivive.jpg"),
+        Card("On the Qui Vive", Card::Type::Reaction, "https://static.krcg.org/card/onthequivive.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
+        Card("Speak with Spirits", Card::Type::Reaction, "https://static.krcg.org/card/speakwithspirits.jpg"),
         
         // Combat
-        {"Canine Horde", "Combat", "https://static.krcg.org/card/caninehorde.jpg", 1},
-        {"Carrion Crows", "Combat", "https://static.krcg.org/card/carrioncrows.jpg", 3},
-        {"Drawing Out the Beast", "Combat", "https://static.krcg.org/card/drawingoutthebeast.jpg", 2},
-        {"Target Vitals", "Combat", "https://static.krcg.org/card/targetvitals.jpg", 6},
-        {"Taste of Vitae", "Combat", "https://static.krcg.org/card/tasteofvitae.jpg", 4},
-        {"Weighted Walking Stick", "Combat", "https://static.krcg.org/card/weightedwalkingstick.jpg", 6},
+        Card("Canine Horde", Card::Type::Combat, "https://static.krcg.org/card/caninehorde.jpg"),
+        Card("Carrion Crows", Card::Type::Combat, "https://static.krcg.org/card/carrioncrows.jpg"),
+        Card("Carrion Crows", Card::Type::Combat, "https://static.krcg.org/card/carrioncrows.jpg"),
+        Card("Carrion Crows", Card::Type::Combat, "https://static.krcg.org/card/carrioncrows.jpg"),
+        Card("Drawing Out the Beast", Card::Type::Combat, "https://static.krcg.org/card/drawingoutthebeast.jpg"),
+        Card("Drawing Out the Beast", Card::Type::Combat, "https://static.krcg.org/card/drawingoutthebeast.jpg"),
+        Card("Target Vitals", Card::Type::Combat, "https://static.krcg.org/card/targetvitals.jpg"),
+        Card("Target Vitals", Card::Type::Combat, "https://static.krcg.org/card/targetvitals.jpg"),
+        Card("Target Vitals", Card::Type::Combat, "https://static.krcg.org/card/targetvitals.jpg"),
+        Card("Target Vitals", Card::Type::Combat, "https://static.krcg.org/card/targetvitals.jpg"),
+        Card("Target Vitals", Card::Type::Combat, "https://static.krcg.org/card/targetvitals.jpg"),
+        Card("Target Vitals", Card::Type::Combat, "https://static.krcg.org/card/targetvitals.jpg"),
+        Card("Taste of Vitae", Card::Type::Combat, "https://static.krcg.org/card/tasteofvitae.jpg"),
+        Card("Taste of Vitae", Card::Type::Combat, "https://static.krcg.org/card/tasteofvitae.jpg"),
+        Card("Taste of Vitae", Card::Type::Combat, "https://static.krcg.org/card/tasteofvitae.jpg"),
+        Card("Taste of Vitae", Card::Type::Combat, "https://static.krcg.org/card/tasteofvitae.jpg"),
+        Card("Weighted Walking Stick", Card::Type::Combat, "https://static.krcg.org/card/weightedwalkingstick.jpg"),
+        Card("Weighted Walking Stick", Card::Type::Combat, "https://static.krcg.org/card/weightedwalkingstick.jpg"),
+        Card("Weighted Walking Stick", Card::Type::Combat, "https://static.krcg.org/card/weightedwalkingstick.jpg"),
+        Card("Weighted Walking Stick", Card::Type::Combat, "https://static.krcg.org/card/weightedwalkingstick.jpg"),
+        Card("Weighted Walking Stick", Card::Type::Combat, "https://static.krcg.org/card/weightedwalkingstick.jpg"),
+        Card("Weighted Walking Stick", Card::Type::Combat, "https://static.krcg.org/card/weightedwalkingstick.jpg"),
         
         // Event
-        {"Narrow Minds", "Event", "https://static.krcg.org/card/narrowminds.jpg", 1},
+        Card("Narrow Minds", Card::Type::Event, "https://static.krcg.org/card/narrowminds.jpg"),
     };
 }
 
@@ -353,6 +556,12 @@ void GameController::endTurn()
     } else {
         setCurrentPlayer("CurrentUser");
     }
+}
+
+void GameController::setReady()
+{
+    addSystemMessage("You are now ready to play.");
+    players_model->updatePlayerStatus("CurrentUser", "Ready");
 }
 
 void GameController::concede()

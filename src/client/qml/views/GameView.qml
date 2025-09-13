@@ -137,7 +137,7 @@ Item {
                                                 Item { Layout.fillWidth: true }
 
                                                 Text {
-                                                        text: "Total Cards: " + gameController.deckModel.rowCount()
+                                                        text: "Total Cards: " + gameController.deckModel.getCryptSize() + "/" + gameController.deckModel.getLibrarySize()
                                                         font.pixelSize: 12
                                                         color: "#7f8c8d"
                                                 }
@@ -158,12 +158,12 @@ Item {
                                                 CardTypeSection {
                                                         Layout.fillWidth: true
                                                         title:  "Crypt"
-                                                        cards: gameController.deckModel.getCardsByType("Crypt")
+                                                        cards: gameController.deckModel.getCryptCards()
                                                 }
                                                 CardTypeSection {
                                                         Layout.fillWidth: true
                                                         title:  "Library"
-                                                        cards: gameController.deckModel.getCardsByType("Library")
+                                                        cards: gameController.deckModel.getLibraryCards()
                                                 }
                                         }
                                 }

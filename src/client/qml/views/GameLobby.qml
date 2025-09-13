@@ -244,7 +244,7 @@ Item {
                 }
                 ComboBox {
                     id: formatCombo
-                    model: ["Rated Regular", "Casual Dual", "Legacy", "Standard", "Pauper"]
+                    model: ["Full VTES", "Limited V5", "Limited Dual"]
                     Layout.fillWidth: true
                     Layout.minimumWidth: 200
                     Layout.minimumHeight: 25
