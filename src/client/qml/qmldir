@@ -1,0 +1,13 @@
+module SchreckNET_QML_PoC
+prefer :/qt/qml/SchreckNET_QML_PoC/
+
+# Views
+LoginScreen 1.0 views/LoginScreen.qml
+GameLobby 1.0 views/GameLobby.qml
+GameTabView 1.0 views/GameTabView.qml
+GameView 1.0 views/GameView.qml
+
+# Components
+CardTypeSection 1.0 components/CardTypeSection.qml
+GameListItem 1.0 components/GameListItem.qml
+PlayerListItem 1.0 components/PlayerListItem.qml

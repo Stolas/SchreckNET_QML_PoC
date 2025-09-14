@@ -65,7 +65,7 @@ if(EMSCRIPTEN)
     
 else()
     # Windows/Desktop build settings
-    find_package(Qt6 REQUIRED COMPONENTS Quick Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS Core Quick Widgets)
 endif()
 
 qt_standard_project_setup()
@@ -75,17 +75,32 @@ qt_policy(SET QTP0001 NEW)
 qt_policy(SET QTP0004 NEW)
 
 qt_add_executable(appSchreckNET_QML_PoC
+    # Main entry point
     main.cc
+    # Controllers
     controllers/login_controller.h
     controllers/login_controller.cc
     controllers/game_lobby_controller.h
     controllers/game_lobby_controller.cc
     controllers/game_controller.h
     controllers/game_controller.cc
+    # Models
+    models/card.h
+    models/card.cc
+    models/deck_model.h
+    models/deck_model.cc
+    models/game_players_model.h
+    models/game_players_model.cc
+    # Game entities
+    game/game_player.h
 )
 
-# Add include directory for the controllers
-target_include_directories(appSchreckNET_QML_PoC PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/controllers)
+# Add include directories for the new structure
+target_include_directories(appSchreckNET_QML_PoC PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/controllers
+    ${CMAKE_CURRENT_SOURCE_DIR}/models
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+)
 
 qt_add_qml_module(appSchreckNET_QML_PoC
     URI SchreckNET_QML_PoC
@@ -94,7 +109,6 @@ qt_add_qml_module(appSchreckNET_QML_PoC
         qml/Main.qml
         qml/views/LoginScreen.qml
         qml/views/GameLobby.qml
-        qml/views/GameListItem.qml
         qml/views/GameTabView.qml
         qml/views/GameView.qml
         qml/components/CardTypeSection.qml
@@ -127,7 +141,7 @@ else()
         WIN32_EXECUTABLE TRUE
     )
     
-    target_link_libraries(appSchreckNET_QML_PoC PRIVATE Qt6::Quick Qt6::Widgets)
+    target_link_libraries(appSchreckNET_QML_PoC PRIVATE Qt6::Core Qt6::Quick Qt6::Widgets)
     deploy_qt_dependencies(appSchreckNET_QML_PoC)
 endif()
 

@@ -5,6 +5,7 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QUrl>
 
 // Include controller headers to ensure QML type registration
 #include "controllers/login_controller.h"
@@ -49,8 +50,9 @@ int main(int argc, char* argv[])
         },
         Qt::QueuedConnection);
         
-    // Load the main QML module
-    engine.loadFromModule("SchreckNET_QML_PoC", "Main");
+    // Load the main QML file using the QML module system
+    const QUrl url(QStringLiteral("qrc:/qt/qml/SchreckNET_QML_PoC/qml/Main.qml"));
+    engine.load(url);
 
     return app.exec();
 }

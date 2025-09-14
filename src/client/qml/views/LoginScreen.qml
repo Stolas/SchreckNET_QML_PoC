@@ -69,7 +69,7 @@ ScrollView {
                     }
                     
                     Button {
-                        text: "??"
+                        text: "\u21bb"
                         ToolTip.text: "Refresh server list"
                         Layout.minimumWidth: 40
                         Layout.minimumHeight: 30
@@ -239,7 +239,7 @@ ScrollView {
                 }
                 
                 Button {
-                    text: "?"
+                    text: "..."
                     ToolTip.text: "Reset Password"
                     Layout.minimumWidth: 30
                     Layout.minimumHeight: 25

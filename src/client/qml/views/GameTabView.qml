@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "../components"
 
 Item {
     id: root
@@ -32,7 +33,7 @@ Item {
                 
                 // Back to Lobby Button
                 Button {
-                    text: "? Back to Lobby"
+                    text: "\x2190 Back to Lobby"
                     Layout.margins: 5
                     Layout.minimumWidth: 120
                     Layout.minimumHeight: 30
@@ -76,7 +77,7 @@ Item {
                                 
                                 // Close button
                                 Button {
-                                    text: "?"
+                                    text: "\x00D7"
                                     Layout.preferredWidth: 20
                                     Layout.preferredHeight: 20
                                     background: Rectangle {
@@ -220,7 +221,7 @@ Item {
             }
             
             Text {
-                text: "You can also join games from the lobby by clicking 'Join' on any available game."
+                text: "You can also join games from the lobby by clicking \x27Join\x27 on any available game."
                 wrapMode: Text.WordWrap
                 font.pixelSize: 12
                 color: "#666"

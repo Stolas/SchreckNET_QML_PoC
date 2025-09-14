@@ -1,7 +1,10 @@
+import QtCore
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import SchreckNET_QML_PoC
+import "../components"
 
 Item {
         id: root
@@ -16,6 +19,12 @@ Item {
                 onGameLeft: {
                         root.backToLobby()
                 }
+        }
+
+        FileDialog {
+            id: deckFileDialog
+            currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+            onAccepted:   gameController.loadDeckFromFile(selectedFile)
         }
 
         ColumnLayout {
@@ -63,7 +72,7 @@ Item {
                                                 text: "Load Deck"
                                                 Layout.minimumWidth: 80
                                                 Layout.minimumHeight: 30
-                                                onClicked: gameController.loadDeckFromFile()
+                                                onClicked: deckFileDialog.open()
                                         }
 
                                         Button {

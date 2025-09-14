@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import SchreckNET_QML_PoC
+import "../components"
 
 Item {
     id: root

@@ -57,7 +57,7 @@ GroupBox {
                             Image {
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                source: card.imageUrl || getCardImageUrl(card.name)
+                                source: card.imageUrl
                                 fillMode: Image.PreserveAspectFit
                                 asynchronous: true
                                 cache: false  // Disable caching to force reload
@@ -180,19 +180,6 @@ GroupBox {
             case "Mythic": return "#e74c3c"
             default: return "#95a5a6"
         }
-    }
-    
-    function getCardImageUrl(cardName) {
-        // Convert card name to URL-friendly format for KRCG
-        var urlName = cardName.toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-            .replace(/\s+/g, '')        // Replace spaces with hyphens
-            .replace(/-+/g, '-')         // Replace multiple hyphens with single
-            .replace(/^-|-$/g, '');      // Remove leading/trailing hyphens
-        
-        var url = "https://static.krcg.org/card/" + urlName + ".jpg"
-        console.log("Generated URL for '" + cardName + "': " + url)
-        return url
     }
     
     function getTotalCardCount() {

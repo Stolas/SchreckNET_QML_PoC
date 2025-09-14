@@ -6,131 +6,11 @@
 #pragma once
 
 #include <QObject>
-#include <QAbstractListModel>
-#include <QVariantMap>
+#include <QStringList>
+#include <QUrl>
 #include <qqmlregistration.h>
-
-// Card class for VTEs cards
-class Card
-{
-public:
-    // Enum for VTEs card types
-    enum class Type {
-        Token           = 0x0000,
-        Crypt           = 0x0001,
-        Master          = 0x0002,
-        Action          = 0x0004,
-        ActionModifier  = 0x0008,
-        PoliticalAction = 0x0010,
-        Equipment       = 0x0020,
-        Retainer        = 0x0040,
-        Ally            = 0x0080,
-        Combat          = 0x0100,
-        Reaction        = 0x0200,
-        Event           = 0x0400,
-        Power           = 0x0800,
-        Conviction      = 0x1000,
-    };
-
-    Card() = default;
-    Card(const QString& name, Type type, const QString& image_url)
-        : name(name), type(type), image_url(image_url) {}
-
-    // Getters
-    QString getName() const { return name; }
-    Type getType() const { return type; }
-    QString typeString() const { return cardTypeToString(type); }
-    QString getImageUrl() const { return image_url; }
-    int getQuantity() const { return quantity; }
-
-    // Setters
-    void setName(const QString& name_) { name = name_; }
-    void setType(Type type_) { type = type_; }
-    void setImageUrl(const QString& url) { image_url = url; }
-    void setQuantity(int quantity_) { quantity = quantity_; }
-
-    // Utility functions
-    static QString cardTypeToString(Type type);
-    static Type stringToCardType(const QString& typeStr);
-
-private:
-    QString name;
-    Type type = Type::Token;
-    QString image_url;
-    int quantity = 0;
-};
-
-// Player in the game
-struct GamePlayer
-{
-    QString name;
-    QString status;      // Ready, Playing, Waiting, Disconnected, etc.
-    int life;
-    int hand_size;
-    bool is_host;
-    QString avatar;
-};
-
-class DeckModel : public QAbstractListModel
-{
-    Q_OBJECT
-    QML_ELEMENT
-
-public:
-    enum DeckRoles {
-        NameRole = Qt::UserRole + 1,
-        TypeRole,
-        ImageUrlRole,
-    };
-
-    explicit DeckModel(QObject* parent = nullptr);
-
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    Q_INVOKABLE int getCryptSize() const;
-    Q_INVOKABLE int getLibrarySize() const;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QHash<int, QByteArray> roleNames() const override;
-
-    Q_INVOKABLE void loadDeck(const QString& deck_file);
-    Q_INVOKABLE void clearDeck();
-    Q_INVOKABLE QStringList getCardTypes() const;
-
-    Q_INVOKABLE QVariantList getCryptCards() const;
-    Q_INVOKABLE QVariantList getLibraryCards() const;
-private:
-    QList<Card> cards;
-    void loadSampleDeck();
-};
-
-class GamePlayersModel : public QAbstractListModel
-{
-    Q_OBJECT
-    QML_ELEMENT
-
-public:
-    enum PlayerRoles {
-        NameRole = Qt::UserRole + 1,
-        StatusRole,
-        LifeRole,
-        HandSizeRole,
-        IsHostRole,
-        AvatarRole
-    };
-
-    explicit GamePlayersModel(QObject* parent = nullptr);
-
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QHash<int, QByteArray> roleNames() const override;
-
-    Q_INVOKABLE void updatePlayerStatus(const QString& player_name, const QString& status);
-    Q_INVOKABLE void updatePlayerLife(const QString& player_name, int life);
-
-private:
-    QList<GamePlayer> players;
-    void loadSamplePlayers();
-};
+#include "models/deck_model.h"
+#include "models/game_players_model.h"
 
 class GameController : public QObject
 {
@@ -165,7 +45,7 @@ public:
     void setIsHost(bool host);
 
 public slots:
-    Q_INVOKABLE void loadDeckFromFile();
+    Q_INVOKABLE void loadDeckFromFile(const QUrl& fileUrl = QUrl());
     Q_INVOKABLE void sendChatMessage();
     Q_INVOKABLE void leaveGame();
     Q_INVOKABLE void startGame(); // Host only
