@@ -59,7 +59,7 @@ Item {
                         
                         Text {
                             anchors.centerIn: parent
-                            text: "??"
+                            text: "🔒"
                             font.pixelSize: 10
                         }
                         
@@ -85,7 +85,7 @@ Item {
                         
                         Text {
                             anchors.centerIn: parent
-                            text: "??"
+                            text: "👥"
                             font.pixelSize: 9
                         }
                         

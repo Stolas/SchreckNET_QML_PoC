@@ -69,7 +69,7 @@ GroupBox {
                                 
                                 onStatusChanged: {
                                     console.log("=== IMAGE STATUS CHANGE ===")
-                                    console.log("Card:", parent.card.name)
+                                    console.log("Card:", card.name)
                                     console.log("Status:", status, "(0=Null, 1=Ready, 2=Loading, 3=Error)")
                                     console.log("Source:", source)
                                     console.log("Progress:", progress)

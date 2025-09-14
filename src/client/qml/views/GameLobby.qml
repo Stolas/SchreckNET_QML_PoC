@@ -282,6 +282,12 @@ Item {
                 text: "Buddies Only"
                 Layout.minimumHeight: 25
             }
+
+            CheckBox {
+                id: noSpectractorsCheck
+                text: "No Spectators"
+                Layout.minimumHeight: 25
+            }
         }
         
         standardButtons: Dialog.Ok | Dialog.Cancel
@@ -296,7 +302,7 @@ Item {
                 0, // Spectators
                 gamePasswordField.text.length > 0,
                 buddiesOnlyCheck.checked
-            )
+            ) // Todo; add spectators only thing
             
             // Reset fields
             gameNameField.text = ""
