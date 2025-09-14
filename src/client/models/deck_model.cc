@@ -5,11 +5,14 @@
 
 #include "deck_model.h"
 #include <QDebug>
-#include <QSet>
-#include <QMap>
 #include <QFile>
-#include <QTextStream>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMap>
 #include <QRegularExpression>
+#include <QSet>
+#include <QTextStream>
 
 // DeckModel implementation
 DeckModel::DeckModel(QObject* parent)
@@ -308,84 +311,41 @@ bool DeckModel::parseDeckFile(const QString& filePath)
         return false;
     }
     
+    QJsonDocument doc;
     QTextStream in(&file);
     while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        
-        // Skip empty lines and comments (lines starting with #, //, or ;)
-        if (line.isEmpty() || line.startsWith("#") || line.startsWith("//") || line.startsWith(";")) {
-            continue;
-        }
-        
-        // Parse line format: "4x Card Name [Type]" or "4 Card Name [Type]" or "Card Name [Type] x4"
-        if (!parseDeckLine(line)) {
-            qDebug() << "Failed to parse line:" << line;
-            // Continue parsing other lines instead of failing completely
-        }
+        doc = QJsonDocument::fromJson(in.readAll().toUtf8());
     }
-    
-    return !cards.isEmpty(); // Return true if we loaded at least one card
-}
+    if (doc.isNull() || !doc.isObject() || doc.isEmpty()) { return false; }
 
-bool DeckModel::parseDeckLine(const QString& line)
-{
-    QString trimmedLine = line.trimmed();
-    
-    // Try different deck line formats
-    // Format 1: "4x Card Name [Type]" or "4 Card Name [Type]"
-    QRegularExpression quantityFirst(R"(^(\d+)x?\s+(.+?)\s*\[(.+?)\]\s*$)");
-    QRegularExpressionMatch match = quantityFirst.match(trimmedLine);
-    
-    if (match.hasMatch()) {
-        int quantity = match.captured(1).toInt();
-        QString cardName = match.captured(2).trimmed();
-        QString typeString = match.captured(3).trimmed();
-        
-        Card::Type cardType = parseCardType(typeString);
-        QString imageUrl = generateImageUrl(cardName);
-        
-        // Add multiple copies of the card
-        for (int i = 0; i < quantity; ++i) {
-            cards.append(Card(cardName, cardType, imageUrl));
+    QJsonObject obj = doc.object();
+
+    // Extract top-level string values.
+    QString name = obj.value("name").toString();
+    QString author = obj.value("author").toString();
+    QString description = obj.value("description").toString();
+
+    qDebug() << "Deck Name:" << name;
+    qDebug() << "Author:" << author;
+    qDebug() << "Description:" << description;
+
+    // Extract the "crypt" array.
+
+    QStringList section_lists;
+    section_lists << "crypt" << "library";
+    Q_FOREACH(const QString &section, section_lists) {
+        QJsonArray card_array = obj.value(section).toArray();
+        for (const QJsonValue &value : card_array) {
+            if (value.isObject()) {
+                QJsonObject card_object = value.toObject();
+                int count = card_object.value("count").toInt();
+                int id = card_object.value("id").toInt();
+                // Todo; lookup card id
+                // Add for 'count'-times card to `cards`
+            }
         }
-        return true;
     }
-    
-    // Format 2: "Card Name [Type] x4"
-    QRegularExpression quantityLast(R"(^(.+?)\s*\[(.+?)\]\s*x(\d+)\s*$)");
-    match = quantityLast.match(trimmedLine);
-    
-    if (match.hasMatch()) {
-        QString cardName = match.captured(1).trimmed();
-        QString typeString = match.captured(2).trimmed();
-        int quantity = match.captured(3).toInt();
-        
-        Card::Type cardType = parseCardType(typeString);
-        QString imageUrl = generateImageUrl(cardName);
-        
-        // Add multiple copies of the card
-        for (int i = 0; i < quantity; ++i) {
-            cards.append(Card(cardName, cardType, imageUrl));
-        }
-        return true;
-    }
-    
-    // Format 3: Simple "Card Name [Type]" (quantity defaults to 1)
-    QRegularExpression simple(R"(^(.+?)\s*\[(.+?)\]\s*$)");
-    match = simple.match(trimmedLine);
-    
-    if (match.hasMatch()) {
-        QString cardName = match.captured(1).trimmed();
-        QString typeString = match.captured(2).trimmed();
-        
-        Card::Type cardType = parseCardType(typeString);
-        QString imageUrl = generateImageUrl(cardName);
-        
-        cards.append(Card(cardName, cardType, imageUrl));
-        return true;
-    }
-    
-    return false;
+    return !cards.isEmpty(); // Return true if we loaded at least one card
 }
 
 Card::Type DeckModel::parseCardType(const QString& typeString)

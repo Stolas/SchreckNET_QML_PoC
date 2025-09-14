@@ -14,7 +14,7 @@ GameController::GameController(QObject* parent)
     , players_model(new GamePlayersModel(this))
     , game_name("Casual Standard")
     , current_player("PlayerOne")
-    , game_phase("Main Phase")
+    , game_phase("")
     , is_host(false)
 {
     addSystemMessage("Game joined successfully!");
@@ -105,7 +105,7 @@ void GameController::startGame()
 {
     if (is_host) {
         addSystemMessage("Starting game...");
-        setGamePhase("Upkeep");
+        setGamePhase("Unlock");
         players_model->updatePlayerStatus("PlayerOne", "Playing");
         players_model->updatePlayerStatus("ProPlayer", "Playing");
         players_model->updatePlayerStatus("CurrentUser", "Playing");

@@ -33,7 +33,7 @@ Item {
                 
                 // Back to Lobby Button
                 Button {
-                    text: "\x2190 Back to Lobby"
+                    text: "\u2190 Back to Lobby"
                     Layout.margins: 5
                     Layout.minimumWidth: 120
                     Layout.minimumHeight: 30
@@ -77,7 +77,7 @@ Item {
                                 
                                 // Close button
                                 Button {
-                                    text: "\x00D7"
+                                    text: "\u00D7"
                                     Layout.preferredWidth: 20
                                     Layout.preferredHeight: 20
                                     background: Rectangle {

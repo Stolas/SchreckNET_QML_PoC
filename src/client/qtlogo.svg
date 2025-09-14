@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="qtGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#41cd52;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#008000;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2c3e50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34495e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Qt Logo Background Circle -->
+  <circle cx="160" cy="100" r="45" fill="url(#qtGradient)" stroke="#006600" stroke-width="2"/>
+  
+  <!-- Qt Letters -->
+  <g fill="white" font-family="Arial, sans-serif" font-weight="bold" font-size="36">
+    <text x="145" y="115" text-anchor="middle">Qt</text>
+  </g>
+  
+  <!-- SchreckNET Text -->
+  <g fill="url(#textGradient)" font-family="Georgia, serif" font-weight="bold">
+    <text x="160" y="170" text-anchor="middle" font-size="24">SchreckNET</text>
+    <text x="160" y="190" text-anchor="middle" font-size="12" opacity="0.8">Vampire: The Eternal Struggle Online</text>
+  </g>
+  
+  <!-- Decorative Elements -->
+  <g stroke="#41cd52" stroke-width="1" fill="none" opacity="0.6">
+    <circle cx="100" cy="60" r="3"/>
+    <circle cx="220" cy="60" r="3"/>
+    <circle cx="80" cy="140" r="2"/>
+    <circle cx="240" cy="140" r="2"/>
+  </g>
+</svg>

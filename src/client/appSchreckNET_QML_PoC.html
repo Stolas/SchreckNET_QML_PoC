@@ -1,0 +1,315 @@
+<!--
+Copyright (C) 2024 The Qt Company Ltd.
+SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+-->
+
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <!--Set visual viewport size for mobile devices to the device size,
+        which results in a scale of 1 and a 1:1 mapping between CSS pixels
+        and Qt device independent pixels. -->
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=0"/>
+
+    <title>SchreckNET - Game Client</title>
+    <style>
+      /* Make the html body cover the entire (visual) viewport with no scroll bars. */
+      html, body { 
+        padding: 0; 
+        margin: 0; 
+        overflow: hidden; 
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      }
+      
+      #screen { 
+        width: 100%; 
+        height: 100%; 
+      }
+      
+      #qtspinner {
+        background: inherit;
+        margin: 0;
+        padding: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      
+      #qtspinner .loading-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        padding: 3em 2em;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        min-width: 350px;
+        backdrop-filter: blur(10px);
+      }
+      
+      #qtspinner .logo {
+        width: 320px;
+        height: 200px;
+        display: block;
+        margin: 0 auto 1em;
+      }
+      
+      #qtspinner .title {
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0.5em 0;
+        letter-spacing: -0.5px;
+      }
+      
+      #qtspinner .subtitle {
+        color: #7f8c8d;
+        font-size: 14px;
+        margin: 0.5em 0 1.5em;
+      }
+      
+      #qtstatus {
+        color: #34495e;
+        font-size: 16px;
+        margin: 1em 0;
+        min-height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      
+      .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ecf0f1;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loading-dots {
+        display: inline-block;
+        animation: loading-dots 1.5s infinite;
+      }
+      
+      @keyframes loading-dots {
+        0%, 20% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      
+      .loading-dots:nth-child(2) { animation-delay: 0.3s; }
+      .loading-dots:nth-child(3) { animation-delay: 0.6s; }
+      
+      .error-details {
+        color: #e74c3c;
+        margin-top: 1em;
+        font-size: 12px;
+        text-align: left;
+        background: #fff5f5;
+        padding: 1em;
+        border-radius: 8px;
+        border: 1px solid #fed7d7;
+        max-width: 100%;
+        word-wrap: break-word;
+      }
+      
+      noscript {
+        color: #e74c3c;
+        font-weight: bold;
+        background: #fff3cd;
+        padding: 1em;
+        border-radius: 8px;
+        border: 1px solid #ffeaa7;
+        margin-top: 1em;
+        display: block;
+      }
+
+      /* Game client specific styles */
+      .game-info {
+        color: #7f8c8d;
+        font-size: 12px;
+        margin-top: 1em;
+        padding: 0.5em;
+        background: rgba(52, 73, 94, 0.1);
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body onload="init()">
+    <figure id="qtspinner">
+      <div class="loading-container">
+        <img src="qtlogo.svg" class="logo" alt="Qt Logo"></img>
+        <div class="title">SchreckNET</div>
+        <div class="subtitle">Vampire: The Eternal Struggle Online</div>
+        <div id="qtstatus">
+          <span class="loading-spinner"></span>
+          <span>Loading application...</span>
+        </div>
+        <div class="game-info">
+          Qt for WebAssembly: appSchreckNET_QML_PoC
+        </div>
+        <noscript>JavaScript is disabled. Please enable JavaScript to use this application.</noscript>
+      </div>
+    </figure>
+    <div id="screen"></div>
+
+    <script type="text/javascript">
+        // Global configuration
+        window.qtConfig = {
+            environment: {
+                QT_QUICK_CONTROLS_STYLE: "Basic",
+                QT_LOGGING_RULES: "*.debug=false"
+            },
+            showLoader: true,
+            showCanvas: true,
+            showExit: true
+        };
+
+        async function init() {
+            const spinner = document.querySelector('#qtspinner');
+            const screen = document.querySelector('#screen');
+            const status = document.querySelector('#qtstatus');
+
+            const showUi = (ui) => {
+                [spinner, screen].forEach(element => element.style.display = 'none');
+                if (screen === ui) {
+                    screen.style.position = 'relative';
+                    screen.style.display = 'block';
+                } else {
+                    ui.style.display = 'flex';
+                }
+            }
+
+            const updateStatus = (message, showSpinner = true) => {
+                const spinnerElement = status.querySelector('.loading-spinner');
+                const textElement = status.querySelector('span:last-child');
+                
+                if (spinnerElement) {
+                    spinnerElement.style.display = showSpinner ? 'block' : 'none';
+                }
+                if (textElement) {
+                    textElement.textContent = message;
+                }
+            }
+
+            try {
+                showUi(spinner);
+                updateStatus('Initializing WebAssembly runtime...');
+
+                // Check for WebAssembly support
+                if (typeof WebAssembly !== 'object') {
+                    throw new Error('WebAssembly is not supported in this browser');
+                }
+
+                // Load the Qt application
+                const instance = await qtLoad({
+                    qt: {
+                        onLoaded: () => {
+                            updateStatus('Application loaded successfully!', false);
+                            setTimeout(() => {
+                                showUi(screen);
+                                console.log('SchreckNET QML PoC loaded successfully');
+                            }, 800);
+                        },
+                        onExit: exitData => {
+                            const exitMessage = 'Application exit' + 
+                                (exitData.code !== undefined ? ` with code ${exitData.code}` : '') +
+                                (exitData.text !== undefined ? ` (${exitData.text})` : '');
+                            
+                            updateStatus(exitMessage, false);
+                            showUi(spinner);
+                            
+                            console.log('Application exited:', exitData);
+                        },
+                        entryFunction: window.appSchreckNET_QML_PoC_entry,
+                        containerElements: [screen],
+                        environment: window.qtConfig.environment,
+                        // Performance optimizations
+                        enableExtensionsByDefault: true,
+                        powerPreference: "high-performance"
+                    }
+                });
+
+                // Store instance globally for debugging
+                window.qtInstance = instance;
+
+            } catch (error) {
+                console.error('Failed to load SchreckNET application:', error);
+                console.error('Error stack:', error.stack);
+                
+                updateStatus('Failed to load application', false);
+                
+                // Show detailed error information
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-details';
+                errorDiv.innerHTML = `
+                    <strong>Error Details:</strong><br>
+                    ${error.message || 'Unknown error occurred'}<br><br>
+                    <strong>Possible solutions:</strong><br>
+                    • Refresh the page and try again<br>
+                    • Check your internet connection<br>
+                    • Ensure your browser supports WebAssembly<br>
+                    • Check the browser console for more details
+                `;
+                
+                const container = spinner.querySelector('.loading-container');
+                container.appendChild(errorDiv);
+            }
+        }
+
+        // Handle window resize for responsive behavior
+        window.addEventListener('resize', function() {
+            // Qt will handle the resize automatically for WASM applications
+            if (window.qtInstance) {
+                // Trigger resize event if needed
+                console.log('Window resized');
+            }
+        });
+
+        // Prevent context menu on right-click for game-like experience
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('Application paused (tab hidden)');
+            } else {
+                console.log('Application resumed (tab visible)');
+            }
+        });
+
+        // Global error handling
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+    </script>
+    
+    <!-- Load the Qt WebAssembly loader -->
+    <script type="text/javascript" src="qtloader.js"></script>
+    
+    <!-- Load the main application JavaScript (generated by Qt) -->
+    <script src="appSchreckNET_QML_PoC.js"></script>
+</body>
+</html>

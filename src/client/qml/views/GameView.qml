@@ -23,7 +23,7 @@ Item {
 
         FileDialog {
             id: deckFileDialog
-            currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+            currentFolder: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
             onAccepted:   gameController.loadDeckFromFile(selectedFile)
         }
 

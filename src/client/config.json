@@ -1,0 +1,47 @@
+{
+  "name": "SchreckNET QML PoC",
+  "version": "1.0.0",
+  "description": "Vampire: The Eternal Struggle Online - WebAssembly Client",
+  "main": "appSchreckNET_QML_PoC.html",
+  "qt": {
+    "version": "6.9.2",
+    "platform": "wasm",
+    "multithreaded": true
+  },
+  "files": {
+    "html": "appSchreckNET_QML_PoC.html",
+    "js": "appSchreckNET_QML_PoC.js",
+    "wasm": "appSchreckNET_QML_PoC.wasm",
+    "loader": "qtloader.js",
+    "logo": "qtlogo.svg"
+  },
+  "deployment": {
+    "compression": {
+      "gzip": true,
+      "brotli": true
+    },
+    "headers": {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin"
+    },
+    "mimeTypes": {
+      ".wasm": "application/wasm",
+      ".js": "application/javascript",
+      ".html": "text/html"
+    }
+  },
+  "development": {
+    "debug": true,
+    "hotReload": false,
+    "sourceMaps": true
+  },
+  "build": {
+    "optimization": "release",
+    "target": "es2020",
+    "features": [
+      "threads",
+      "simd",
+      "bulk-memory"
+    ]
+  }
+}

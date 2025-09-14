@@ -53,6 +53,8 @@ public:
 private:
     QString name;
     Type type = Type::Token;
+    QString text;
+    // Todo; add rulings. contains of a list of rules with 'refs'. and each 'ref' contains an id and a url.
     QString image_url;
     int quantity = 0;
 };
